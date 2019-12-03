@@ -291,6 +291,12 @@ ggplot(hektas_post, aes(BIST_ROC1_lag1, Close_ROC1)) + geom_line(color = "darkre
 trainingH<-hektas_post[1:4936,]
 testingH<-hektas_post[4937:5057,]
 
+trainingK<-karsan_post[1:4801,]
+testingK<-karsan_post[4802:4922,]
+
+trainingS<-sabanci_post[1:4936,]
+testingS<-sabanci_post[4937:5057,]
+
 # Traditional metrics can be misleading in Time Series Forecasting
 # We'll see the results of simply using the Last Value as our prediction, then we'll compare other models to that.
 
@@ -312,17 +318,37 @@ MAPE(hektas$Close_lag1, hektas$Close)
 ggplot(data = hektas, aes(x = Date, y=Close)) + geom_point(color ='blue') + 
   geom_line(color='red', data = hektas, aes(x=Date, y=Close_lag1)) + ylab("Close (Actual: Blue, Prediction: Red)")
 
-RSquare(hektas$Close_lag1[4937:5057], hektas$Close[4937:5057])
-RMSE(hektas$Close_lag1[4937:5057], hektas$Close[4937:5057])
-MAPE(hektas$Close_lag1[4937:5057], hektas$Close[4937:5057])
 temp<-hektas[4937:5057,]
+RSquare(temp$Close_lag1, temp$Close)
+RMSE(temp$Close_lag1, temp$Close)
+MAPE(temp$Close_lag1, temp$Close)
 ggplot(data = temp, aes(x = Date, y=Close)) + geom_line(color ='blue') + 
   geom_line(color='red', data = temp, aes(x=Date, y=Close_lag1))  + ylab("Close (Actual: Blue, Prediction: Red)")
 
+tempK<-karsan[4802:4922,]
+RSquare(tempK$Close_lag1, tempK$Close)
+RMSE(tempK$Close_lag1, tempK$Close)
+MAPE(tempK$Close_lag1, tempK$Close)
+ggplot(data = tempK, aes(x = Date, y=Close)) + geom_line(color ='blue') + 
+  geom_line(color='red', data = tempK, aes(x=Date, y=Close_lag1))  + ylab("Close (Actual: Blue, Prediction: Red)")
+
+tempS<-sabanci[4937:5057,]
+RSquare(tempS$Close_lag1, tempS$Close)
+RMSE(tempS$Close_lag1, tempS$Close)
+MAPE(tempS$Close_lag1, tempS$Close)
+ggplot(data = tempS, aes(x = Date, y=Close)) + geom_line(color ='blue') + 
+  geom_line(color='red', data = tempS, aes(x=Date, y=Close_lag1))  + ylab("Close (Actual: Blue, Prediction: Red)")
+
+RSquare(tempK$Close_Abs_Change_lag1, tempK$Close_Abs_Change)
+RMSE(tempK$Close_Abs_Change_lag1, tempK$Close_Abs_Change)
+ggplot(data = tempK, aes(x = Date, y=Close_Abs_Change)) + geom_line(color ='blue') + 
+  geom_line(color='red', data = tempK, aes(x=Date, y=Close_Abs_Change_lag1)) + ylab("Closing Price Difference (Actual: Blue, Prediction: Red)")
+
 RSquare(hektas$Close_Abs_Change_lag1, hektas$Close_Abs_Change)
 RMSE(hektas$Close_Abs_Change_lag1, hektas$Close_Abs_Change)
-ggplot(data = hektas, aes(x = Date, y=Close_Abs_Change)) + geom_line(color ='blue') + 
-  geom_line(color='red', data = hektas, aes(x=Date, y=Close_Abs_Change_lag1)) + ylab("Closing Price Difference (Actual: Blue, Prediction: Red)")
+
+RSquare(tempS$Close_Abs_Change_lag1, tempS$Close_Abs_Change)
+RMSE(tempS$Close_Abs_Change_lag1, tempS$Close_Abs_Change)
 
 RSquare(hektas$Close_Abs_Change_lag1[4937:5057], hektas$Close_Abs_Change[4937:5057])
 RMSE(hektas$Close_Abs_Change_lag1[4937:5057], hektas$Close_Abs_Change[4937:5057])
@@ -334,6 +360,12 @@ RMSE(hektas_post$Close_ROC1_lag1, hektas_post$Close_ROC1)
 ggplot(data = hektas, aes(x = Date, y=Close_ROC1)) + geom_line(color ='blue') + 
   geom_line(color='red', data = hektas, aes(x=Date, y=Close_ROC1_lag1))  + ylab("Closing Price % Difference (Actual: Blue, Prediction: Red)")
 
+RSquare(tempK$Close_ROC1_lag1, tempK$Close_ROC1)
+RMSE(tempK$Close_ROC1_lag1, tempK$Close_ROC1)
+
+RSquare(tempS$Close_ROC1_lag1, tempS$Close_ROC1)
+RMSE(tempS$Close_ROC1_lag1, tempS$Close_ROC1)
+
 RSquare(hektas_post$Close_ROC1_lag1[4937:5057], hektas_post$Close_ROC1[4937:5057])
 RMSE(hektas_post$Close_ROC1_lag1[4937:5057], hektas_post$Close_ROC1[4937:5057])
 ggplot(data = temp, aes(x = Date, y=Close_ROC1)) + geom_line(color ='blue') + 
@@ -344,108 +376,95 @@ fitControl <- trainControl(method = "repeatedcv", number = 10, repeats=5, savePr
 # Fit a linear regression line through all Close values in the training set, use it to predict Close values in the Test set
 
 
-model1<-train(Close ~ Date, data = trainingH, 
+model1<-train(Close ~ Date, data = trainingS, 
               method = "lm",
               trControl= fitControl,
               na.action = na.omit)
 model1
 model1$finalModel$coefficients
 
-ggplot() + geom_point(data=trainingH, aes(Date, Close), colour = "darkred") + 
+ggplot() + geom_point(data=trainingS, aes(Date, Close), colour = "darkred") + 
   geom_abline(intercept = model1$finalModel$coefficients[1], slope = model1$finalModel$coefficients[2])
 
-model1_pred <- data.frame(Close_Pred = predict(model1, testingH), Date=testingH$Date)
-ggplot(data = hektas_post, aes(x = Date, y=Close)) + 
-  geom_point(color ='blue') +
+model1_pred <- data.frame(Close_Pred = predict(model1, testingS), Date=testingS$Date)
+ggplot(data = sabanci_post, aes(x = Date, y=Close)) + 
+  geom_line(color ='blue') +
   geom_abline(intercept = model1$finalModel$coefficients[1], slope = model1$finalModel$coefficients[2], color='green') + 
   geom_line(color='red',data = model1_pred, aes(x=Date, y=Close_Pred)) 
 
 
-SSE_hektas = sum((testingH$Close - model1_pred$Close_Pred)^2)
-SST_hektas = sum((testingH$Close - mean(trainingH$Close))^2)
-R_square1 = 1 - SSE_hektas/SST_hektas
-RMSE1 = sqrt(SSE_hektas/length(model1_pred$Close_Pred))
-R_square1
-RMSE1
-RSquare(model1_pred$Close_Pred, testingH$Close)
-RMSE(model1_pred$Close_Pred, testingH$Close)
-MAPE(model1_pred$Close_Pred, testingH$Close)
+
+RSquare(model1_pred$Close_Pred, testingS$Close)
+RMSE(model1_pred$Close_Pred, testingS$Close)
+MAPE(model1_pred$Close_Pred, testingS$Close)
 
 
 
 # Multiple Linear Regression, using Exponentional Moving Average and Rate of Change to predict Close
 
-model2 <- train(Close ~ Close_EMA5 + Close_ROC5_lag1, data=trainingH,
+model2 <- train(Close ~ Close_EMA5 + Close_ROC5_lag1, data=trainingS,
                 method="lm",
                 trControl = fitControl,
                 na.action = na.omit)
 model2
 summary(model2)
-model2_pred <- data.frame(Close_Pred = predict(model2, testingH), Date=testingH$Date)
-ggplot(data = testingH, aes(x = Date, y=Close)) + 
-  geom_point(color ='blue') + geom_line(color='red',data = model2_pred, aes(x=Date, y=Close_Pred))
+model2_pred <- data.frame(Close_Pred = predict(model2, testingS), Date=testingS$Date)
+ggplot(data = testingS, aes(x = Date, y=Close)) + 
+  geom_line(color ='blue') + geom_line(color='red',data = model2_pred, aes(x=Date, y=Close_Pred)) + ylab("Close (Actual: Blue, Prediction: Red)")
 
-SSE_hektas2 = sum((testingH$Close - model2_pred$Close_Pred)^2)
-SST_hektas2 = sum((testingH$Close - mean(trainingH$Close))^2)
-R_square2 = 1 - SSE_hektas2/SST_hektas2
-RMSE2 = sqrt(SSE_hektas2/length(model2_pred$Close_Pred))
-R_square2
-RMSE2
-RSquare(model2_pred$Close_Pred, testingH$Close)
-RMSE(model2_pred$Close_Pred, testingH$Close)
-MAPE(model2_pred$Close_Pred, testingH$Close)
+RSquare(model2_pred$Close_Pred, testingS$Close)
+RMSE(model2_pred$Close_Pred, testingS$Close)
+MAPE(model2_pred$Close_Pred, testingS$Close)
+
+# Multiple Linear Regression, using more predictors to predict Close
+
+model2 <- train(Close ~ Close_EMA5 + Close_ROC1_lag1 + Close_ROC5_lag1 + Volume_EMA5 + USD_TRY_EMA5 + CrudeOil_EMA5 + BIST_EMA5 + 
+                  USD_TRY_ROC5_lag1 + CrudeOil_ROC5_lag1 + BIST_ROC5_lag1, data=trainingS,
+                method="lm",
+                trControl = fitControl,
+                na.action = na.omit)
+model2
+summary(model2)
+model2_pred <- data.frame(Close_Pred = predict(model2, testingS), Date=testingS$Date)
+ggplot(data = testingS, aes(x = Date, y=Close)) + 
+  geom_line(color ='blue') + geom_line(color='red',data = model2_pred, aes(x=Date, y=Close_Pred)) + ylab("Close (Actual: Blue, Prediction: Red)")
+
+RSquare(model2_pred$Close_Pred, testingS$Close)
+RMSE(model2_pred$Close_Pred, testingS$Close)
+MAPE(model2_pred$Close_Pred, testingS$Close)
+
+
 
 # Multiple Linear Regression, predicting rate of change (close(t) - close(t-1))/close(t-1) * 100
 
-model3 <- train(Close_ROC1 ~ Close_EMA5 + Close_ROC5_lag1, data=trainingH,
+model3 <- train(Close_ROC1 ~ Close_EMA5 + Close_ROC5_lag1, data=trainingS,
                 method="lm",
                 trControl = fitControl,
                 na.action = na.omit)
 model3
 summary(model3)
-model3_train <- data.frame(Close_ROC1_Pred = model3$finalModel$fitted.values, Date=trainingH$Date)
-ggplot(data = trainingH, aes(x = Date, y=Close_ROC1)) + geom_line(color="blue") + 
-  geom_line(color='red', data = model3_train, aes(x=Date, y=Close_ROC1_Pred))
-model3_pred <- data.frame(Close_ROC1_Pred = predict(model3, testingH), Date=testingH$Date, Close_ROC5_lag1=testingH$Close_ROC5_lag1)
-ggplot(data = testingH, aes(x = Date, y=Close_ROC1)) + 
+model3_pred <- data.frame(Close_ROC1_Pred = predict(model3, testingS), Date=testingS$Date, Close_ROC5_lag1=testingS$Close_ROC5_lag1)
+ggplot(data = testingS, aes(x = Date, y=Close_ROC1)) + 
   geom_line(color ='blue') + geom_line(color='red',data = model3_pred, aes(x=Date, y=Close_ROC1_Pred))
-ggplot(data = testingH, aes(x = Close_ROC5_lag1, y=Close_ROC1)) + 
-  geom_point(color ='blue') + geom_line(color='red',data = model3_pred, aes(x=Close_ROC5_lag1, y=Close_ROC1_Pred))
 
-SSE_hektas3 = sum((testingH$Close_ROC1 - model3_pred$Close_ROC1_Pred)^2)
-SST_hektas3 = sum((testingH$Close_ROC1 - mean(trainingH$Close_ROC1))^2)
-R_square3 = 1 - SSE_hektas3/SST_hektas3
-RMSE3 = sqrt(SSE_hektas3/length(model3_pred$Close_ROC1_Pred))
-R_square3
-RMSE3
-RSquare(model3_pred$Close_ROC1_Pred, testingH$Close_ROC1)
-RMSE(model3_pred$Close_ROC1_Pred, testingH$Close_ROC1)
+RSquare(model3_pred$Close_ROC1_Pred, testingS$Close_ROC1)
+RMSE(model3_pred$Close_ROC1_Pred, testingS$Close_ROC1)
 
 # Multiple Linear Regression, predicting rate of change, using more predictors
 model4 <- train(Close_ROC1 ~ Close_EMA5 + Close_ROC1_lag1 + Close_ROC5_lag1 + Volume_EMA5 + USD_TRY_EMA5 + CrudeOil_EMA5 + BIST_EMA5 + 
-                  USD_TRY_ROC5_lag1 + CrudeOil_ROC5_lag1 + BIST_ROC5_lag1, data=trainingH,
+                  USD_TRY_ROC5_lag1 + CrudeOil_ROC5_lag1 + BIST_ROC5_lag1, data=trainingS,
                 method="lm",
                 trControl = fitControl,
                 na.action = na.omit)
 model4
 summary(model4)
-model4_train <- data.frame(Close_ROC1_Pred = model4$finalModel$fitted.values, Date=trainingH$Date)
-ggplot(data = trainingH, aes(x = Date, y=Close_ROC1)) + geom_line(color="blue") + 
-  geom_line(color='red', data = model4_train, aes(x=Date, y=Close_ROC1_Pred))
 
-
-model4_pred <- data.frame(Close_ROC1_Pred = predict(model4, testingH), Date=testingH$Date)
-ggplot(data = testingH, aes(x = Date, y=Close_ROC1)) + 
+model4_pred <- data.frame(Close_ROC1_Pred = predict(model4, testingS), Date=testingS$Date)
+ggplot(data = testingS, aes(x = Date, y=Close_ROC1)) + 
   geom_line(color ='blue') + geom_line(color='red',data = model4_pred, aes(x=Date, y=Close_ROC1_Pred))
 
-SSE_hektas4 = sum((testingH$Close_ROC1 - model4_pred$Close_ROC1_Pred)^2)
-SST_hektas4 = sum((testingH$Close_ROC1 - mean(trainingH$Close_ROC1))^2)
-R_square4 = 1 - SSE_hektas4/SST_hektas4
-RMSE4 = sqrt(SSE_hektas4/length(model4_pred$Close_ROC1_Pred))
-R_square4
-RMSE4
-RSquare(model4_pred$Close_ROC1_Pred, testingH$Close_ROC1)
-RMSE(model4_pred$Close_ROC1_Pred, testingH$Close_ROC1)
+RSquare(model4_pred$Close_ROC1_Pred, testingS$Close_ROC1)
+RMSE(model4_pred$Close_ROC1_Pred, testingS$Close_ROC1)
 
 # Classification
 # Last Value
@@ -465,65 +484,65 @@ testingH_class<-hektas_class[4937:5057,]
 trainingH_class2<-hektas_class2[1:4936,]
 testingH_class2<-hektas_class2[4937:5057,]
 
-model5 <- train(Increase ~ ., data=trainingH_class,
+karsan_class <- karsan_post[cols]
+karsan_class2 <- karsan_post[cols2]
+trainingK_class<-karsan_class[1:4801,]
+testingK_class<-karsan_class[4802:4922,]
+trainingK_class2<-karsan_class2[1:4801,]
+testingK_class2<-karsan_class2[4802:4922,]
+
+sabanci_class <- sabanci_post[cols]
+sabanci_class2 <- sabanci_post[cols2]
+trainingS_class<-sabanci_class[1:4936,]
+testingS_class<-sabanci_class[4937:5057,]
+trainingS_class2<-sabanci_class2[1:4936,]
+testingS_class2<-sabanci_class2[4937:5057,]
+
+model5 <- train(Increase ~ ., data=trainingK_class,
                 method="vglmAdjCat",
                 preProcess=c("scale","center"),
                 trControl= fitControl,
                 na.action = na.omit)
 model5
-pred5<-predict(model5, testingH_class[-7])
-confusionMatrix(pred5 , testingH_class$Increase)
-pred5_post <- predict(model5,  testingH_class[-7], type = "prob")
-roc5_post <- roc(testingH_class$Increase, pred5_post$X1, smoothed = TRUE, 
-                 ci=TRUE, ci.alpha=0.9, stratified=FALSE, plot=TRUE, 
+pred5<-predict(model5, testingK_class[-7])
+confusionMatrix(pred5 , testingK_class$Increase)
+pred5_post <- predict(model5,  testingK_class[-7], type = "prob")
+roc5_post <- multiclass.roc(testingH_class$Increase, pred5_post, smoothed = TRUE, 
+                  stratified=FALSE, plot=TRUE, 
                  auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, 
                  print.auc=TRUE, show.thres=TRUE)
-sens.ci5 <- ci.se(roc5_post)
-plot(sens.ci5, type="shape", col="lightblue")
-plot(sens.ci5, type="bars")
+roc5_post[["auc"]]
 
 #
-model6 <- train(Increase ~ ., data=trainingH_class2,
+model6 <- train(Increase ~ ., data=trainingS_class2,
                 method="vglmAdjCat",
                 preProcess=c("scale","center"),
                 trControl= fitControl,
                 na.action = na.omit)
 model6
-pred6<-predict(model6, testingH_class2[-4])
-confusionMatrix(pred6 , testingH_class2$Increase)
-pred6_post <- predict(model6,  testingH_class2[-4], type = "prob")
-roc6_post <- roc(testingH_class2$Increase, pred6_post$X1, smoothed = TRUE, 
-                 ci=TRUE, ci.alpha=0.9, stratified=FALSE, plot=TRUE, 
+pred6<-predict(model6, testingS_class2[-4])
+confusionMatrix(pred6 , testingS_class2$Increase)
+pred6_post <- predict(model6,  testingS_class2[-4], type = "prob")
+roc6_post <- multiclass.roc(testingS_class2$Increase, pred6_post, smoothed = TRUE, 
+                 stratified=FALSE, plot=TRUE, 
                  auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, 
                  print.auc=TRUE, show.thres=TRUE)
-sens.ci6 <- ci.se(roc6_post)
-plot(sens.ci6, type="shape", col="lightblue")
-plot(sens.ci6, type="bars")
+roc6_post[["auc"]]
 
 # Random Forest
-trainingH_class_data <- trainingH_class[-7]
-trainingH_class_labels <- trainingH_class[7]
-str(trainingH_class_labels)
-model7 <- train(Increase ~ ., data=trainingH_class2,
+
+model7 <- train(Increase ~ ., data=trainingS_class2,
                 method="rf",
                 preProcess=c("scale","center"),
                 trControl= fitControl,
                 na.action = na.omit)
 
 model7
-pred7<-predict(model7, testingH_class2[-4])
-confusionMatrix(pred7 , testingH_class2$Increase)
-pred7_post <- predict(model7,  testingH_class2[-4], type = "prob")
-roc7_post <- roc(testingH_class2$Increase, pred7_post$X1, smoothed = TRUE, 
-                 ci=TRUE, ci.alpha=0.9, stratified=FALSE, plot=TRUE, 
-                 auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, 
-                 print.auc=TRUE, show.thres=TRUE)
-sens.ci7 <- ci.se(roc7_post)
-plot(sens.ci7, type="shape", col="lightblue")
-plot(sens.ci7, type="bars")
-
-roc7_post <- multiclass.roc(testingH_class2$Increase, pred7_post$X1, direction = '<',
-                 smoothed = TRUE, 
+pred7<-predict(model7, testingS_class2[-4])
+confusionMatrix(pred7 , testingS_class2$Increase)
+pred7_post <- predict(model7,  testingS_class2[-4], type = "prob")
+roc7_post <- multiclass.roc(testingS_class2$Increase, pred7_post, smoothed = TRUE, 
                  stratified=FALSE, plot=TRUE, 
                  auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, 
                  print.auc=TRUE, show.thres=TRUE)
+roc7_post[["auc"]]
