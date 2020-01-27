@@ -6,6 +6,7 @@ library(pROC)
 library(class)
 library(C50)
 library(mlbench)
+library(rpart)
 
 set.seed(123)
 
@@ -20,8 +21,7 @@ df$target_class <- as.factor(df$target_class)
 
 # dropping highly correlated features (p > 0.9)
 df_cols <- colnames(df)
-  rejected_cols <- c('Skewness.of.the.DM.SNR.curve', 'Skewness.of.the.integrated.profile')
-df_cols %in% rejected_cols
+rejected_cols <- c('Skewness.of.the.DM.SNR.curve', 'Skewness.of.the.integrated.profile')
 df_cols<-df_cols[! df_cols %in% rejected_cols]
 
 
@@ -98,6 +98,8 @@ roc3 <- roc(testing$target_class, pred3_probs$X1,
             max.auc.polygon=TRUE, grid=TRUE,
             print.auc=TRUE)
 roc3[["auc"]]
+model3.foo <- C5.0(target_class ~ ., data = training, trials = 20)
+plot(model3.foo)
 # Logistic Regression
 model4 <- train(target_class ~ ., data = training, 
                 method = "vglmAdjCat", 
